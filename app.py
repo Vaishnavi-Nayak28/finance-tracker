@@ -2,7 +2,18 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
-import json
+
+# Custom CSS for better sidebar behavior
+st.markdown("""
+    <style>
+    [data-testid="stSidebar"] {
+        overflow-y: auto;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        padding-top: 1rem;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Page configuration
 st.set_page_config(page_title="Personal Finance Tracker", page_icon="💰", layout="wide")
@@ -13,23 +24,29 @@ if 'transactions' not in st.session_state:
 
 # Title
 st.title("💰 Personal Finance Tracker")
-st.markdown("Track your income and expenses with insightful visualizations!")
+st.markdown("Track your income and expenses with beautiful visualizations!")
 
 # Sidebar for input
 with st.sidebar:
     st.header("Add Transaction")
     
-    transaction_type = st.selectbox("Type", ["Income", "Expense"])
-    amount = st.number_input("Amount ($)", min_value=0.01, step=0.01)
+    # Use radio for type (less space than selectbox)
+    transaction_type = st.radio("Type", ["Income", "Expense"], horizontal=True)
+    
+    amount = st.number_input("Amount ($)", min_value=0.01, step=0.01, format="%.2f")
+    
     category = st.selectbox(
         "Category",
         ["Salary", "Freelance", "Investment"] if transaction_type == "Income" 
-        else ["Food", "Transport", "Entertainment", "Shopping", "Bills", "Healthcare", "Other"]
+        else ["Food", "Transport", "Entertainment", "Shopping", "Bills", "Healthcare", "Other"],
+        key="category_select"
     )
-    description = st.text_input("Description (optional)")
-    date = st.date_input("Date", datetime.now())
     
-    if st.button("Add Transaction", type="primary"):
+    description = st.text_input("Description (optional)", max_chars=50)
+    
+    date = st.date_input("Date", datetime.now(), max_value=datetime.now())
+    
+    if st.button("Add Transaction", type="primary", use_container_width=True):
         transaction = {
             "date": date.strftime("%Y-%m-%d"),
             "type": transaction_type,
@@ -38,7 +55,7 @@ with st.sidebar:
             "description": description
         }
         st.session_state.transactions.append(transaction)
-        st.success("Transaction added!")
+        st.success("✅ Transaction added!")
         st.rerun()
 
 # Main content
